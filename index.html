@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mind Rush - Game Edukasi</title>
+<meta name="description" content="Mind Rush: Game edukasi tower defense seru! Jawab pertanyaan untuk melawan zombie dan lindungi Brainy si maskot otak!">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- HOME -->
+<div id="screen-home" class="screen">
+  <button class="sound-toggle" id="snd-home">🔊</button>
+  <div class="home-content">
+    <div style="text-align:center;">
+      <svg class="brainy-home" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="60" rx="36" ry="32" fill="#c084fc" opacity=".9"/>
+        <path d="M32 54 Q40 42 52 50 Q56 37 68 46 Q78 36 86 48 Q94 54 88 64" stroke="#9333ea" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M34 64 Q42 72 54 66 Q60 77 72 68 Q80 76 88 66" stroke="#9333ea" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <line x1="60" y1="30" x2="60" y2="90" stroke="#9333ea" stroke-width="1.5" opacity=".5"/>
+        <circle cx="48" cy="58" r="6" fill="white"/><circle cx="72" cy="58" r="6" fill="white"/>
+        <circle cx="50" cy="59" r="3.5" fill="#1e1b4b"/><circle cx="74" cy="59" r="3.5" fill="#1e1b4b"/>
+        <circle cx="51" cy="57.5" r="1.2" fill="white"/><circle cx="75" cy="57.5" r="1.2" fill="white"/>
+        <path d="M50 69 Q60 78 70 69" stroke="#9333ea" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <rect x="42" y="22" width="36" height="6" rx="2" fill="#4c1d95"/>
+        <polygon points="60,14 78,24 42,24" fill="#7c3aed"/>
+        <line x1="78" y1="24" x2="82" y2="36" stroke="#fbbf24" stroke-width="2"/>
+        <circle cx="82" cy="37" r="3" fill="#fbbf24"/>
+      </svg>
+      <div class="logo-title">Mind Rush</div>
+      <div class="logo-sub">🧠 Game Edukasi Seru!</div>
+    </div>
+    <div class="home-buttons">
+      <button class="btn btn-primary" id="btn-play" style="font-size:1.2rem;padding:18px;">🎮 Mulai Main</button>
+      <button class="btn btn-ghost" id="btn-howto">📖 Cara Bermain</button>
+    </div>
+    <div id="home-scores" style="text-align:center;font-size:.8rem;color:var(--text-secondary);"></div>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div id="screen-howto" class="screen">
+  <button class="sound-toggle" id="snd-howto">🔊</button>
+  <div style="width:100%;max-width:500px;padding:20px;overflow-y:auto;max-height:100vh;">
+    <h2 class="screen-title" style="margin-bottom:16px;">📖 Cara Bermain</h2>
+    <div class="glass-panel instructions-panel">
+      <h3>🎯 Tujuan</h3>
+      <p>Jawab pertanyaan untuk menembak zombie sebelum mereka mencapai Brainy (otak di kiri)!</p><br>
+      <h3>⚡ Kontrol</h3>
+      <p>• Tekan tombol jawaban A/B/C/D<br>• Keyboard: 1, 2, 3, 4<br>• P atau Esc = Jeda</p><br>
+      <h3>💥 Serangan &amp; Nyawa</h3>
+      <p>• <span style="color:var(--green)">Jawaban Benar</span> = Tembak zombie terdekat<br>• <span style="color:var(--yellow)">Benar &lt;5 detik</span> = TURBO! (damage x2)<br>• <span style="color:var(--red)">Jawaban Salah / Waktu Habis</span> = Nyawa berkurang (-1 ❤️)<br>• Combo x3 = Serang satu jalur<br>• Combo x5 = Brain Blast! (semua jalur)</p><br>
+      <h3>🧟 Jenis Zombie</h3>
+      <p>• Biasa: HP 1 &nbsp;|&nbsp; Pelari: cepat HP 1<br>• Armor: lambat HP 2-3 &nbsp;|&nbsp; Boss: HP banyak</p><br>
+      <h3>⚡ Power-up</h3>
+      <p>• ❄️ Freeze (F): Beku semua zombie 5 detik<br>• 🎯 50:50 (H): Hapus 2 jawaban salah<br>• ⏭️ Skip (S): Lewati soal<br>• 🛡️ Shield: Lindungi dari 1 serangan zombie</p><br>
+      <h3>⭐ Nilai Bintang</h3>
+      <p>Poin benar + bonus kecepatan + bonus combo + sisa nyawa. Raih 3 bintang!</p>
+    </div>
+    <br>
+    <button class="btn btn-primary" id="btn-howto-back" style="width:100%">← Kembali</button>
+  </div>
+</div>
+
+<!-- AGE SELECTION -->
+<div id="screen-age" class="screen">
+  <button class="sound-toggle" id="snd-age">🔊</button>
+  <h2 class="screen-title">Pilih Kategori Usia</h2>
+  <div class="age-cards">
+    <div class="age-card glass-panel" id="age-child">
+      <div class="age-icon">🌟</div>
+      <div class="age-info">
+        <h3>Anak (6–9 th)</h3>
+        <p>3 pilihan • 35 dtk • Zombie santai<br>Hewan, warna, bentuk, berhitung</p>
+      </div>
+      <div class="age-badge" style="background:rgba(251,191,36,.2);color:#fbbf24;border:1px solid #fbbf24;">Mudah</div>
+    </div>
+    <div class="age-card glass-panel" id="age-preteen">
+      <div class="age-icon">🚀</div>
+      <div class="age-info">
+        <h3>Pra-remaja (10–13 th)</h3>
+        <p>4 pilihan • 25 dtk • Zombie sedang<br>Geografi, sains, sejarah Indonesia</p>
+      </div>
+      <div class="age-badge" style="background:rgba(96,165,250,.2);color:#60a5fa;border:1px solid #60a5fa;">Sedang</div>
+    </div>
+    <div class="age-card glass-panel" id="age-teen">
+      <div class="age-icon">⚡</div>
+      <div class="age-info">
+        <h3>Remaja (14–18 th)</h3>
+        <p>4 pilihan • 20 dtk • Zombie dinamis<br>Sains, sejarah dunia, teknologi, logika</p>
+      </div>
+      <div class="age-badge" style="background:rgba(248,113,113,.2);color:#f87171;border:1px solid #f87171;">Tantangan</div>
+    </div>
+  </div>
+  <button class="btn btn-ghost" id="btn-age-back">← Kembali</button>
+</div>
+
+<!-- LEVEL MAP -->
+<div id="screen-map" class="screen">
+  <div class="map-header">
+    <button class="btn btn-ghost" id="btn-map-back" style="padding:8px 14px;font-size:.85rem;">← Kembali</button>
+    <h2 id="map-title">Pilih Level</h2>
+    <button class="btn btn-ghost" id="btn-change-age" style="padding:8px 14px;font-size:.85rem;margin-left:auto;">Ganti Usia</button>
+  </div>
+  <div id="map-worlds" style="width:100%;max-width:600px;display:flex;flex-direction:column;gap:20px;padding-bottom:20px;"></div>
+</div>
+
+<!-- GAME -->
+<div id="screen-game" class="screen">
+  <div class="hud">
+    <div class="hud-lives" id="hud-lives"></div>
+    <div class="hud-score" id="hud-score">0</div>
+    <div class="hud-combo" id="hud-combo">🔥 x0</div>
+    <div class="hud-level" id="hud-level">W1-L1</div>
+    <div id="hud-stars" style="display:flex;gap:3px;font-size:.9rem;">⭐⭐⭐</div>
+    <button class="hud-pause" id="btn-pause" title="Pause (P)">⏸</button>
+  </div>
+  <div class="powerups-bar">
+    <button class="powerup-btn" id="pu-freeze" title="Freeze (F)" disabled>❄️<span class="powerup-count" id="pu-freeze-c">0</span></button>
+    <button class="powerup-btn" id="pu-fifty" title="50:50 (H)" disabled>🎯<span class="powerup-count" id="pu-fifty-c">0</span></button>
+    <button class="powerup-btn" id="pu-skip" title="Skip (S)" disabled>⏭️<span class="powerup-count" id="pu-skip-c">0</span></button>
+    <button class="powerup-btn" id="pu-shield" title="Shield" disabled>🛡️<span class="powerup-count" id="pu-shield-c">0</span></button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+      <span style="font-size:.75rem;color:var(--text-secondary);" id="wave-display">Gelombang 1/3</span>
+    </div>
+  </div>
+  <div class="game-arena" id="game-arena">
+    <canvas id="game-canvas"></canvas>
+    <div class="wave-announce" id="wave-announce">
+      <div class="wave-announce-title" id="wave-announce-title"></div>
+      <div class="wave-announce-sub" id="wave-announce-sub"></div>
+    </div>
+  </div>
+  <div class="question-panel">
+    <div class="question-header">
+      <div class="timer-ring">
+        <svg viewBox="0 0 44 44"><circle class="timer-bg" cx="22" cy="22" r="18"/><circle class="timer-fill" id="timer-fill-circle" cx="22" cy="22" r="18"/></svg>
+        <div class="timer-text" id="timer-text">20</div>
+      </div>
+      <div class="question-text" id="question-text">Bersiap...</div>
+    </div>
+    <div class="answers-grid" id="answers-grid"></div>
+    <div class="explanation-bar" id="explanation-bar"></div>
+  </div>
+  <div class="pause-overlay" id="pause-overlay">
+    <div class="pause-title">⏸ Dijeda</div>
+    <div style="color:var(--text-secondary);font-size:.9rem;">Game dihentikan sementara</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+      <button class="btn btn-primary" id="btn-resume">▶ Lanjutkan</button>
+      <button class="btn btn-ghost" id="btn-restart">🔄 Ulangi Level</button>
+      <button class="btn btn-ghost" id="btn-quit">🏠 Menu Utama</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="screen-result" class="screen">
+  <div class="result-content">
+    <h2 class="screen-title" id="result-title">Level Selesai!</h2>
+    <div class="result-stars">
+      <span class="result-star" id="rs1">⭐</span>
+      <span class="result-star" id="rs2">⭐</span>
+      <span class="result-star" id="rs3">⭐</span>
+    </div>
+    <div class="glass-panel result-score-panel">
+      <div class="result-score-label">Skor Total</div>
+      <div class="result-score-value" id="result-score">0</div>
+      <div class="result-breakdown" id="result-breakdown"></div>
+    </div>
+    <div class="result-buttons">
+      <button class="btn btn-ghost" id="btn-result-retry">🔄 Ulangi</button>
+      <button class="btn btn-primary" id="btn-result-next">Lanjut ▶</button>
+      <button class="btn btn-ghost" id="btn-result-map">🗺 Peta Level</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div id="screen-gameover" class="screen">
+  <svg class="gameover-brainy" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="60" cy="60" rx="36" ry="32" fill="#c084fc" opacity=".7"/>
+    <path d="M32 54 Q40 42 52 50 Q56 37 68 46 Q78 36 86 48 Q94 54 88 64" stroke="#9333ea" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M34 64 Q42 72 54 66 Q60 77 72 68 Q80 76 88 66" stroke="#9333ea" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <line x1="60" y1="30" x2="60" y2="90" stroke="#9333ea" stroke-width="1.5" opacity=".5"/>
+    <circle cx="48" cy="58" r="6" fill="white"/><circle cx="72" cy="58" r="6" fill="white"/>
+    <circle cx="48" cy="60" r="3.5" fill="#1e1b4b"/><circle cx="72" cy="60" r="3.5" fill="#1e1b4b"/>
+    <path d="M43 50 Q48 48 53 50" stroke="#9333ea" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M67 50 Q72 48 77 50" stroke="#9333ea" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M50 72 Q60 65 70 72" stroke="#9333ea" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="45" cy="67" rx="2" ry="4" fill="#60a5fa" opacity=".8"/>
+    <ellipse cx="75" cy="67" rx="2" ry="4" fill="#60a5fa" opacity=".8"/>
+  </svg>
+  <div class="gameover-title">GAME OVER</div>
+  <div class="gameover-sub">Zombie berhasil menembus pertahanan!<br>Jangan menyerah, coba lagi!</div>
+  <div class="glass-panel" style="padding:16px 28px;text-align:center;">
+    <div style="font-size:.85rem;color:var(--text-secondary);">Skor Akhir</div>
+    <div style="font-size:2rem;font-weight:900;color:var(--red);text-shadow:var(--glow-red);" id="gameover-score">0</div>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+    <button class="btn btn-primary" id="btn-go-retry">🔄 Coba Lagi</button>
+    <button class="btn btn-ghost" id="btn-go-map">🗺 Peta Level</button>
+    <button class="btn btn-ghost" id="btn-go-home">🏠 Menu</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
