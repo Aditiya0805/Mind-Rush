@@ -1,0 +1,41 @@
+// [tingkat 1-3, pertanyaan, [4 pilihan], indeks jawaban benar]
+const RAW = [
+  [1, 'SDG 4 berfokus pada bidang apa?', ['Pendidikan berkualitas', 'Energi bersih', 'Air bersih', 'Kehidupan di laut'], 0],
+  [1, 'SDGs adalah singkatan dari...', ['Sustainable Development Goals', 'Social Development Groups', 'Student Duty Guidelines', 'Smart Digital Games'], 0],
+  [1, 'Berapa jumlah tujuan dalam SDGs?', ['10', '17', '25', '30'], 1],
+  [1, 'Kemampuan membaca dan menulis disebut...', ['Literasi', 'Navigasi', 'Imitasi', 'Kreasi'], 0],
+  [1, 'Hari Pendidikan Nasional diperingati setiap tanggal...', ['17 Agustus', '2 Mei', '21 April', '28 Oktober'], 1],
+  [1, 'Siapakah Bapak Pendidikan Nasional Indonesia?', ['Ki Hajar Dewantara', 'Ir. Soekarno', 'Moh. Hatta', 'B.J. Habibie'], 0],
+  [1, 'Tempat meminjam dan membaca buku disebut...', ['Kantin', 'Perpustakaan', 'Bengkel', 'Stasiun'], 1],
+  [1, 'Belajar sepanjang hayat berarti...', ['Belajar hanya saat di sekolah', 'Belajar hanya saat ujian', 'Terus belajar selama hidup', 'Berhenti belajar setelah lulus'], 2],
+  [1, 'Bahasa resmi negara Indonesia adalah...', ['Bahasa Jawa', 'Bahasa Inggris', 'Bahasa Melayu', 'Bahasa Indonesia'], 3],
+  [1, 'Hasil dari 12 × 12 adalah...', ['124', '132', '144', '156'], 2],
+  [1, 'Planet tempat kita tinggal bernama...', ['Mars', 'Bumi', 'Venus', 'Jupiter'], 1],
+  [1, 'Salah satu manfaat pendidikan adalah...', ['Menambah pengetahuan dan keterampilan', 'Mengurangi teman', 'Membuat malas', 'Menghindari tanggung jawab'], 0],
+
+  [2, 'SDG 4 menargetkan pendidikan dasar dan menengah yang...', ['Berbayar mahal', 'Gratis, adil, dan berkualitas', 'Hanya untuk kota besar', 'Khusus anak tertentu'], 1],
+  [2, 'Hari Literasi Internasional diperingati pada tanggal...', ['8 September', '10 November', '1 Juni', '20 Mei'], 0],
+  [2, 'UNESCO adalah badan PBB yang bergerak di bidang...', ['Pertanian dan pangan', 'Kesehatan dunia', 'Pendidikan, ilmu pengetahuan, dan budaya', 'Perdagangan dunia'], 2],
+  [2, 'Program bantuan dana pendidikan bagi siswa kurang mampu di Indonesia adalah...', ['Program Indonesia Pintar', 'Kartu Prakerja', 'Dana Desa', 'Bantuan Pangan'], 0],
+  [2, 'Pendidikan inklusif berarti...', ['Hanya untuk siswa berprestasi', 'Memberi kesempatan belajar bagi semua, termasuk penyandang disabilitas', 'Hanya untuk siswa kota', 'Hanya untuk orang dewasa'], 1],
+  [2, 'Literasi digital adalah kemampuan...', ['Bermain game seharian', 'Mengunduh semua aplikasi', 'Memakai teknologi digital secara bijak dan kritis', 'Membeli gawai terbaru'], 2],
+  [2, 'Semboyan "Tut Wuri Handayani" berarti...', ['Di depan memberi teladan', 'Di tengah membangun semangat', 'Dari belakang memberi dorongan', 'Di samping memberi hukuman'], 2],
+  [2, 'Ibu kota negara Jepang adalah...', ['Osaka', 'Kyoto', 'Tokyo', 'Nagoya'], 2],
+  [2, 'Gas yang diserap tumbuhan saat fotosintesis adalah...', ['Oksigen', 'Karbon dioksida', 'Nitrogen', 'Hidrogen'], 1],
+  [2, 'R.A. Kartini dikenal memperjuangkan...', ['Pendidikan dan emansipasi perempuan', 'Perdagangan rempah', 'Pertahanan laut', 'Olahraga nasional'], 0],
+  [2, 'Hambatan akses pendidikan di daerah 3T (terdepan, terluar, tertinggal) antara lain...', ['Terlalu banyak sekolah', 'Keterbatasan sarana, guru, dan infrastruktur', 'Libur terlalu panjang', 'Seragam terlalu mahal'], 1],
+  [2, 'Padanan "belajar sepanjang hayat" dalam bahasa Inggris adalah...', ['Lifelong learning', 'Distance learning', 'Short course', 'Home alone'], 0],
+  [2, 'Kesetaraan gender dalam pendidikan berarti...', ['Hanya laki-laki boleh sekolah', 'Hanya perempuan boleh sekolah', 'Laki-laki dan perempuan punya hak belajar yang sama', 'Sekolah dipisah total'], 2],
+  [2, 'Langkah pertama saat menemukan berita yang mencurigakan adalah...', ['Langsung membagikan', 'Memeriksa sumber dan fakta', 'Mengabaikan semua berita', 'Menambah komentar'], 1],
+
+  [3, 'Target pencapaian SDGs ditetapkan pada tahun...', ['2025', '2030', '2045', '2050'], 1],
+  [3, 'SDGs diadopsi oleh PBB pada tahun...', ['2000', '2010', '2015', '2020'], 2],
+  [3, 'Ki Hajar Dewantara lahir dengan nama...', ['Soewardi Soerjaningrat', 'Soekarno', 'Sutan Sjahrir', 'Tjokroaminoto'], 0],
+  [3, 'Angka melek huruf adalah persentase penduduk yang...', ['Memiliki ijazah universitas', 'Mampu membaca dan menulis', 'Bersekolah di kota', 'Bekerja di bidang pendidikan'], 1],
+  [3, 'Berpikir kritis berarti...', ['Menerima semua informasi apa adanya', 'Menganalisis informasi secara logis sebelum menyimpulkan', 'Mengkritik tanpa alasan', 'Menghafal tanpa memahami'], 1],
+  [3, 'Penerima Nobel Perdamaian termuda yang memperjuangkan pendidikan anak perempuan adalah...', ['Greta Thunberg', 'Malala Yousafzai', 'Wangari Maathai', 'Aung San Suu Kyi'], 1],
+  [3, 'Konferensi dunia "Education for All" tahun 1990 diadakan di...', ['Jomtien, Thailand', 'Paris, Prancis', 'Jenewa, Swiss', 'Tokyo, Jepang'], 0],
+  [3, 'Kurikulum yang diluncurkan pada 2022 dengan pembelajaran lebih fleksibel adalah...', ['Kurikulum 2013', 'Kurikulum Merdeka', 'KTSP', 'Rentjana Pelajaran 1947'], 1],
+];
+
+export const QUESTIONS = RAW.map(([lv, text, options, answer]) => ({ lv, text, options, answer }));
