@@ -49,7 +49,7 @@ export default class GameScene extends Phaser.Scene {
     this.buildQuizPanel();
 
     const kb = this.input.keyboard;
-    this.keys = kb.addKeys({ left: 'LEFT', right: 'RIGHT' });
+    this.keys = kb.addKeys({ left: 'LEFT', right: 'RIGHT', up: 'UP', space: 'SPACE', w: 'W' });
     kb.on('keydown-ESC', () => this.pauseGame());
 
     kb.on('keydown', (event) => {
@@ -301,6 +301,17 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
+    // Lompat & Salto Akrobatik (Panah Atas / Spasi / W)
+    if (J(this.keys.up) || J(this.keys.space) || J(this.keys.w)) {
+      const act = this.student.jump();
+      if (act === 'salto') {
+        Sfx.play('salto');
+        this.floatText(this.student.x, this.student.y - 170, '✨ SALTO!', hex(COLOR.yellow));
+      } else if (act === 'jump') {
+        Sfx.play('jump');
+      }
+    }
+
     const currentSpeed = Math.min(0.5 + this.elapsed * 0.003, 0.85);
     this.world.update(dt, currentSpeed);
 
@@ -329,6 +340,23 @@ export default class GameScene extends Phaser.Scene {
     for (const type of this.world.check(this.lane)) {
       const hx = this.student.x, hy = this.student.y - 140 * this.student.scaleX;
       if (type === 'obs') {
+        // Melompati barikade rintangan!
+        if (this.student.jumpY < -40) {
+          if (this.student.isSalto) {
+            this.score += 50;
+            Sfx.play('combo');
+            this.createBurst(hx, hy, COLOR.yellow, 16);
+            this.floatText(hx, hy - 40, '🔥 SALTO LEWATI RINTANGAN! +50', hex(COLOR.yellow));
+          } else {
+            this.score += 25;
+            Sfx.play('book');
+            this.createBurst(hx, hy, COLOR.sky, 12);
+            this.floatText(hx, hy - 40, 'Lompat Bersih! +25', hex(COLOR.sky));
+          }
+          this.refreshHud();
+          continue;
+        }
+
         this.chase.pull(this.cfg.hitPenalty);
         this.student.flash = 0.5;
         this.combo = 0;

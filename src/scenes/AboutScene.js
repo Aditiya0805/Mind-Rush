@@ -12,6 +12,7 @@ const BODY = [
 
 const CONTROLS = [
   '⬅  ➡  Panah Kiri & Kanan   : Berpindah jalur lari',
+  '⬆ / Spasi / W              : Lompat (Tekan 2x di udara untuk SALTO akrobatik!)',
   '⌨  A / B / C / D atau 1 - 4 : Memilih jawaban kuis instan',
   '🖱  Klik Mouse               : Alternatif memilih opsi jawaban',
   '⏸  ESC                      : Jeda permainan',

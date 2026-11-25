@@ -75,7 +75,13 @@ export default class MenuScene extends Phaser.Scene {
     // Tombol Ganti Nama di Bawah Siswa
     this.nameBtn = button(this, 920, 665, 250, 48, `👤 ${Storage.getPlayerName()} (Ganti)`, () => this.openNameDialog(), { size: 17, fill: COLOR.navy });
 
-    this.student.setInteractive(new Phaser.Geom.Rectangle(-40, -180, 80, 180), Phaser.Geom.Rectangle.Contains).on('pointerup', () => this.openNameDialog());
+    // Interaksi Siswa di Menu: Klik atau tekan Spasi/Up untuk Lompat & Salto!
+    this.student.setInteractive(new Phaser.Geom.Rectangle(-40, -180, 80, 180), Phaser.Geom.Rectangle.Contains).on('pointerup', () => {
+      this.doStudentStunt();
+    });
+
+    this.input.keyboard.on('keydown-SPACE', () => this.doStudentStunt());
+    this.input.keyboard.on('keydown-UP', () => this.doStudentStunt());
 
     // Interaksi klik Pak Tono yang lucu
     this.teacher.setInteractive(new Phaser.Geom.Rectangle(-45, -220, 90, 220), Phaser.Geom.Rectangle.Contains).on('pointerup', () => {
@@ -94,6 +100,17 @@ export default class MenuScene extends Phaser.Scene {
         },
       });
     });
+  }
+
+  doStudentStunt() {
+    const act = this.student.jump();
+    if (act === 'salto') {
+      Sfx.play('salto');
+      const t = text(this, 920, 360, '✨ SALTO!', 24, hex(COLOR.yellow), { stroke: '#07142f', strokeThickness: 4 }).setDepth(50);
+      this.tweens.add({ targets: t, y: 320, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
+    } else if (act === 'jump') {
+      Sfx.play('jump');
+    }
   }
 
   openNameDialog() {
