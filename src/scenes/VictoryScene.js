@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { W, COLOR, DIFFICULTY, hex } from '../config.js';
 import { text, button } from '../ui/UI.js';
 import { drawCityBackdrop } from '../ui/Backdrop.js';
+import { Storage } from '../systems/Storage.js';
 import Student from '../characters/Student.js';
 
 export default class VictoryScene extends Phaser.Scene {
@@ -22,7 +23,7 @@ export default class VictoryScene extends Phaser.Scene {
       rotate: { start: 0, end: 360 }, frequency: 40, tint: [COLOR.yellow, COLOR.sky, COLOR.white, COLOR.royal, COLOR.red],
     }).setDepth(5);
     text(this, 80, 60, 'KAMU LOLOS!', 90, hex(COLOR.yellow), { stroke: hex(COLOR.royal), strokeThickness: 8 }, [0, 0]);
-    text(this, 84, 170, 'Semua pertanyaan terjawab dan guru tertinggal jauh.', 26, hex(COLOR.sky), {}, [0, 0]);
+    text(this, 84, 170, `Hebat, ${Storage.getPlayerName()}! Semua pertanyaan terjawab dan Pak Tono tertinggal jauh.`, 25, hex(COLOR.sky), {}, [0, 0]);
     text(this, 84, 245, `Skor akhir (${DIFFICULTY[r.level].label})`, 24, '#ffffff', {}, [0, 0]);
     text(this, 80, 275, String(r.score), 110, hex(COLOR.yellow), {}, [0, 0]);
     text(this, 84, 410, `High score: ${r.high}${r.isNew ? '  — rekor baru!' : ''}`, 28, '#ffffff', {}, [0, 0]);

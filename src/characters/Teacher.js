@@ -1,20 +1,48 @@
 import Phaser from 'phaser';
 import { COLOR, FONT, hex } from '../config.js';
 
-// Guru: dewasa, ekspresi tegas komikal, memegang penggaris kuning.
+// Guru: Pak Tono, ekspresi tegas komikal, memegang penggaris kuning.
 export default class Teacher extends Phaser.GameObjects.Container {
-  constructor(scene, x, y) {
+  constructor(scene, x, y, name = 'Pak Tono') {
     super(scene, x, y);
+    this.teacherName = name;
     this.g = scene.add.graphics();
-    this.mark = scene.add.text(36, -262, '!', { fontFamily: FONT, fontSize: '44px', fontStyle: 'bold', color: hex(COLOR.red) }).setOrigin(0.5);
-    this.add([this.g, this.mark]);
+    this.mark = scene.add.text(42, -265, '!', { fontFamily: FONT, fontSize: '42px', fontStyle: 'bold', color: hex(COLOR.red), resolution: 2 }).setOrigin(0.5);
+
+    // Name tag badge Pak Tono
+    this.tag = scene.add.container(0, -218);
+    this.tagBg = scene.add.graphics();
+    this.tagT = scene.add.text(0, 0, this.teacherName, {
+      fontFamily: FONT,
+      fontSize: '15px',
+      fontStyle: 'bold',
+      color: hex(COLOR.yellow),
+      stroke: '#07142f',
+      strokeThickness: 3,
+      resolution: 2,
+    }).setOrigin(0.5);
+    this.tag.add([this.tagBg, this.tagT]);
+
+    this.add([this.g, this.mark, this.tag]);
     this.t = 0;
     scene.add.existing(this);
+    this.updateNameTag();
     this.draw();
   }
+
+  updateNameTag() {
+    this.tagT.setText(this.teacherName);
+    const tw = Math.max(68, this.tagT.width + 22);
+    this.tagBg.clear();
+    this.tagBg.fillStyle(0x7f1d1d, 0.92).fillRoundedRect(-tw / 2, -13, tw, 26, 8);
+    this.tagBg.lineStyle(2, COLOR.yellow, 0.95).strokeRoundedRect(-tw / 2, -13, tw, 26, 8);
+  }
+
   tick(dt, rate = 1) {
     this.t += dt * rate;
-    this.mark.y = -262 + Math.sin(this.t * 10) * 5;
+    const a = Math.sin(this.t * 9), oy = -Math.abs(a) * 6;
+    this.mark.y = -265 + oy + Math.sin(this.t * 10) * 5;
+    this.tag.y = -218 + oy;
     this.draw();
   }
   draw() {

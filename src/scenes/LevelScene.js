@@ -3,6 +3,7 @@ import { COLOR, DIFFICULTY, hex } from '../config.js';
 import { text, button } from '../ui/UI.js';
 import { drawCityBackdrop } from '../ui/Backdrop.js';
 import { Storage } from '../systems/Storage.js';
+import { showNameModal } from '../ui/NameModal.js';
 
 export default class LevelScene extends Phaser.Scene {
   constructor() { super('LevelScene'); }
@@ -16,6 +17,9 @@ export default class LevelScene extends Phaser.Scene {
       text(this, x, 500, `Rekor: ${Storage.getHigh(key)}`, 24, hex(COLOR.yellow));
     });
     button(this, 150, 650, 220, 56, 'Kembali', () => this.scene.start('MenuScene'), { fill: COLOR.navy, size: 22 });
+    this.nameBtn = button(this, 1110, 650, 260, 56, `👤 ${Storage.getPlayerName()} (Ubah)`, () => {
+      showNameModal(this, (n) => this.nameBtn.setLabel(`👤 ${n} (Ubah)`));
+    }, { fill: COLOR.navy, size: 20 });
     this.input.keyboard.on('keydown-ESC', () => this.scene.start('MenuScene'));
   }
 }

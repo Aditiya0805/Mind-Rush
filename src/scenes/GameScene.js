@@ -22,8 +22,9 @@ export default class GameScene extends Phaser.Scene {
     this.score = 0; this.lives = MAX_LIVES; this.lane = 1; this.elapsed = 0;
     this.timeLeft = QUIZ_TIME; this.state = 'idle'; this.current = null; this.laneOffset = 0;
 
+    this.teacherSide = 0.72;
     this.world = new RoadWorld(this, this.cfg);
-    this.teacher = new Teacher(this, CX, lineY(1.1)).setDepth(8);
+    this.teacher = new Teacher(this, CX + laneW(1.1) * 0.72, lineY(1.1)).setDepth(11);
     this.student = new Student(this, laneX(1, MC_Q), lineY(MC_Q)).setDepth(10).setScale(scaleAt(MC_Q) * 1.1);
 
     this.buildHud();
@@ -100,7 +101,7 @@ export default class GameScene extends Phaser.Scene {
     this.barG.clear();
     this.barG.fillStyle(0x2a3f73).fillRoundedRect(36, 150, 380, 18, 9);
     this.barG.fillStyle(col).fillRoundedRect(36, 150, Math.max(6, (380 * d) / 100), 18, 9);
-    this.distT.setText(`Jarak guru: ${Math.ceil(d)} m`);
+    this.distT.setText(`Jarak Pak Tono: ${Math.ceil(d)} m`);
     const t = Math.max(0, this.timeLeft), tc = t > 5 ? COLOR.sky : COLOR.red;
     this.timeG.clear();
     this.timeG.fillStyle(0x2a3f73).fillRoundedRect(910, 64, 340, 12, 6);
@@ -183,8 +184,12 @@ export default class GameScene extends Phaser.Scene {
     const rate = 1 + Math.min(this.elapsed * 0.004, 0.5);
     this.student.tick(dt, rate);
 
-    const tq = Phaser.Math.Linear(0.84, 1.14, this.chase.dist / 100);
-    this.laneOffset += ((this.student.x - CX) / laneW(MC_Q) - this.laneOffset) * Math.min(1, dt * 3);
+    const tq = Phaser.Math.Linear(0.88, 1.18, this.chase.dist / 100);
+    // Guru mengejar di sisi samping belakang MC agar tidak bertumpukan
+    if (this.lane === 0) this.teacherSide = 0.72;
+    else if (this.lane === 2) this.teacherSide = -0.72;
+    const targetOffset = (this.student.x - CX) / laneW(MC_Q) + this.teacherSide;
+    this.laneOffset += (targetOffset - this.laneOffset) * Math.min(1, dt * 3.5);
     this.teacher.setPosition(CX + this.laneOffset * laneW(tq), lineY(tq)).setScale(scaleAt(tq) * 1.15);
     this.teacher.tick(dt, rate);
 

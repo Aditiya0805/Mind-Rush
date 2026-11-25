@@ -5,8 +5,8 @@ import { drawCityBackdrop } from '../ui/Backdrop.js';
 
 const BODY = [
   'MIND RUSH adalah game edukasi bertema SDG 4: Pendidikan Berkualitas.',
-  'Kamu pelajar yang dikejar guru. Jawab kuis dengan cepat dan benar agar guru menjauh.',
-  'Jawaban salah atau waktu habis mengurangi nyawa dan membuat guru mendekat.',
+  'Kamu pelajar yang dikejar Pak Tono. Jawab kuis dengan cepat dan benar agar Pak Tono menjauh.',
+  'Jawaban salah atau waktu habis mengurangi nyawa dan membuat Pak Tono mendekat.',
   'Hindari barikade merah, ambil buku untuk bonus 10 poin.',
 ];
 const KEYS = [

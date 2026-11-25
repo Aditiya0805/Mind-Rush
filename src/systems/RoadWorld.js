@@ -18,16 +18,27 @@ export default class RoadWorld {
     this.g = scene.add.graphics().setDepth(0);
     this.off = 0; this.time = 0; this.sideDist = 0; this.itemTimer = 1.6;
     this.side = []; this.items = [];
-    for (let p = 0.02; p < 1.1; p += 0.07) this.spawnSide(p);
+    this.sideStep = 0.16;
+    this.sideCount = 0;
+    for (let p = 0.04; p < 1.15; p += this.sideStep) this.spawnSide(p);
   }
 
   spawnSide(p) {
+    const isBuilding = (this.sideCount++ % 2 === 0);
     for (const s of [-1, 1]) {
       const r = Math.random();
+      let kind;
+      if (isBuilding) {
+        kind = r < 0.15 ? 4 : 0;
+      } else {
+        kind = r < 0.55 ? 1 : r < 0.8 ? 2 : 3;
+      }
       this.side.push({
-        s, p: Math.max(0, p - Math.random() * 0.03),
-        kind: r < 0.1 ? 4 : r < 0.5 ? 0 : r < 0.72 ? 1 : r < 0.88 ? 2 : 3,
-        h: 200 + Math.random() * 130, ci: Math.floor(Math.random() * 4), seed: Math.floor(Math.random() * 9),
+        s, p,
+        kind,
+        h: kind === 0 ? 170 + Math.random() * 80 : 180,
+        ci: Math.floor(Math.random() * 4),
+        seed: Math.floor(Math.random() * 9),
       });
     }
   }
@@ -52,7 +63,7 @@ export default class RoadWorld {
     this.time += dt;
     this.off = (this.off + speed * dt) % 0.1;
     this.sideDist += speed * dt;
-    if (this.sideDist >= 0.07) { this.sideDist -= 0.07; this.spawnSide(0); }
+    if (this.sideDist >= this.sideStep) { this.sideDist -= this.sideStep; this.spawnSide(0); }
     this.side.forEach((o) => { o.p += speed * dt; });
     this.side = this.side.filter((o) => o.p < 1.25);
     this.itemTimer -= dt;
