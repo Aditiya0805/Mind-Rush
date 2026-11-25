@@ -9,7 +9,12 @@ const BODY = [
   'Jawaban salah atau waktu habis mengurangi nyawa dan membuat guru mendekat.',
   'Hindari barikade merah, ambil buku untuk bonus 10 poin.',
 ];
-const KEYS = ['A / Panah Kiri: pindah jalur kiri', 'D / Panah Kanan: pindah jalur kanan', 'Mouse: pilih jawaban', 'Esc: jeda permainan'];
+const KEYS = [
+  'Panah Kiri / Kanan: pindah jalur',
+  'A, B, C, D atau 1 - 4: jawab kuis di keyboard',
+  'Mouse: bisa juga klik pilihan jawaban',
+  'Esc: jeda permainan',
+];
 
 export default class AboutScene extends Phaser.Scene {
   constructor() { super('AboutScene'); }

@@ -29,8 +29,29 @@ export default class GameScene extends Phaser.Scene {
     this.buildHud();
     this.buildQuizPanel();
     const kb = this.input.keyboard;
-    this.keys = kb.addKeys({ left: 'LEFT', right: 'RIGHT', a: 'A', d: 'D' });
+    this.keys = kb.addKeys({ left: 'LEFT', right: 'RIGHT' });
     kb.on('keydown-ESC', () => this.pauseGame());
+
+    kb.on('keydown', (event) => {
+      if (this.scene.isPaused() || this.state !== 'asking' || event.repeat) return;
+      const k = event.key ? event.key.toUpperCase() : '';
+      const code = event.code || '';
+      let idx = -1;
+      if (k === 'A' || k === '1' || code === 'KeyA' || code === 'Digit1' || code === 'Numpad1') idx = 0;
+      else if (k === 'B' || k === '2' || code === 'KeyB' || code === 'Digit2' || code === 'Numpad2') idx = 1;
+      else if (k === 'C' || k === '3' || code === 'KeyC' || code === 'Digit3' || code === 'Numpad3') idx = 2;
+      else if (k === 'D' || k === '4' || code === 'KeyD' || code === 'Digit4' || code === 'Numpad4') idx = 3;
+
+      if (idx !== -1) {
+        this.answer(idx);
+      }
+    });
+
+    this.events.once('shutdown', () => {
+      kb.off('keydown');
+      kb.off('keydown-ESC');
+    });
+
     this.nextQuestion();
   }
 
@@ -58,6 +79,7 @@ export default class GameScene extends Phaser.Scene {
     this.timeT = text(this, x0 + 376, 20, '15', 32, '#ffffff', {}, [1, 0]).setDepth(21);
     this.timeG = this.add.graphics().setDepth(21);
     this.qT = text(this, x0 + 30, 104, '', 23, '#ffffff', { wordWrap: { width: 340 }, lineSpacing: 6 }, [0, 0]).setDepth(21);
+    text(this, x0 + 203, 276, 'Tekan A, B, C, D atau 1 - 4 di keyboard', 16, hex(COLOR.sky), {}, [0.5, 0.5]).setDepth(21);
     this.btns = [0, 1, 2, 3].map((i) => button(this, x0 + 203, 336 + i * 88, 350, 76, '', () => this.answer(i), { size: 19 }).setDepth(21));
     this.fbT = text(this, x0 + 203, H - 34, '', 22, '#ffffff', { wordWrap: { width: 360 }, align: 'center' }).setDepth(21);
   }
@@ -98,7 +120,7 @@ export default class GameScene extends Phaser.Scene {
     this.qNumT.setText(`Pertanyaan ${q.number}/${q.total}`);
     this.qT.setText(q.text);
     this.fbT.setText('');
-    this.btns.forEach((b, i) => { b.setLabel(`${'ABCD'[i]}. ${q.options[i]}`); b.unlock(); });
+    this.btns.forEach((b, i) => { b.setLabel(`[${'ABCD'[i]}]  ${q.options[i]}`); b.unlock(); });
   }
 
   answer(i) {
@@ -151,8 +173,8 @@ export default class GameScene extends Phaser.Scene {
     this.chase.update(dt);
 
     const J = Phaser.Input.Keyboard.JustDown;
-    if (J(this.keys.left) || J(this.keys.a)) this.lane = Math.max(0, this.lane - 1);
-    if (J(this.keys.right) || J(this.keys.d)) this.lane = Math.min(2, this.lane + 1);
+    if (J(this.keys.left)) this.lane = Math.max(0, this.lane - 1);
+    if (J(this.keys.right)) this.lane = Math.min(2, this.lane + 1);
 
     this.world.update(dt, Math.min(0.5 + this.elapsed * 0.003, 0.8));
 
