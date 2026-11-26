@@ -40,7 +40,7 @@ export default class VictoryScene extends Phaser.Scene {
     button(this, 260, 530, 360, 64, '▶  Main Lagi', () => this.scene.start('GameScene', { level: r.level }), { size: 26, fill: COLOR.royal });
     button(this, 260, 610, 360, 64, '🏠  Menu Utama', () => this.scene.start('MenuScene'), { fill: COLOR.navy });
 
-    this.student = new Student(this, 980, 640).setScale(2.3);
+    this.student = new Student(this, 980, 640, { facing: 'front' }).setScale(2.3);
     this.student.updateNameTag(true);
     this.tweens.add({ targets: this.student, y: 535, duration: 420, yoyo: true, repeat: -1, ease: 'Quad.easeOut' });
   }

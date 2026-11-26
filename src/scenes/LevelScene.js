@@ -50,8 +50,19 @@ export default class LevelScene extends Phaser.Scene {
     });
 
     button(this, 160, 650, 240, 56, '⬅  Kembali', () => this.scene.start('MenuScene'), { fill: COLOR.navy, size: 20 });
+
+    const genderLabel = () => (Storage.getGender() === 'female' ? '👧 Siswi (Wanita)' : '👦 Siswa (Pria)');
+    this.genderBtn = button(this, 760, 650, 250, 56, genderLabel(), () => {
+      const next = Storage.getGender() === 'male' ? 'female' : 'male';
+      Storage.setGender(next);
+      this.genderBtn.setLabel(genderLabel());
+    }, { fill: COLOR.navy, size: 19 });
+
     this.nameBtn = button(this, 1100, 650, 280, 56, `👤 ${Storage.getPlayerName()} (Ganti)`, () => {
-      showNameModal(this, (n) => this.nameBtn.setLabel(`👤 ${n} (Ganti)`));
+      showNameModal(this, (n) => {
+        this.nameBtn.setLabel(`👤 ${n} (Ganti)`);
+        this.genderBtn.setLabel(genderLabel());
+      });
     }, { fill: COLOR.navy, size: 20 });
 
     this.input.keyboard.on('keydown-ESC', () => this.scene.start('MenuScene'));

@@ -2,11 +2,23 @@ import Phaser from 'phaser';
 import { COLOR, FONT } from '../config.js';
 import { Storage } from '../systems/Storage.js';
 
-// MC: pelajar laki-laki, tampak dari belakang (seragam putih, celana navy, tas royal).
+const poly = (g, c, pts, a = 1) => {
+  g.fillStyle(c, a);
+  g.fillPoints(pts.map(([x, y]) => ({ x, y })), true);
+};
+
+// MC: pelajar pria/wanita, mendukung tampak depan (menghadap kamera) & tampak belakang (menghadap jalan).
 export default class Student extends Phaser.GameObjects.Container {
-  constructor(scene, x, y, name) {
+  constructor(scene, x, y, nameOrOpts, opts = {}) {
     super(scene, x, y);
-    this.playerName = name || Storage.getPlayerName();
+    const cfg = typeof nameOrOpts === 'object' && nameOrOpts !== null
+      ? nameOrOpts
+      : { ...opts, name: nameOrOpts };
+
+    this.playerName = cfg.name || Storage.getPlayerName();
+    this.gender = cfg.gender || Storage.getGender();
+    this.facing = cfg.facing || 'back';
+    this.nameGlow = false;
 
     // 1. Lapisan Bayangan di atas aspal (tetap di ground y = 0)
     this.shadowG = scene.add.graphics();
@@ -24,7 +36,7 @@ export default class Student extends Phaser.GameObjects.Container {
     // 4. Name Tag Badge di atas kepala (tetap tegak)
     this.tag = scene.add.container(0, -188);
     this.tagBg = scene.add.graphics();
-    this.tagT = scene.add.text(0, 0, `🎓 ${this.playerName}`, {
+    this.tagT = scene.add.text(0, 0, '', {
       fontFamily: FONT,
       fontSize: '15px',
       fontStyle: 'bold',
@@ -54,13 +66,29 @@ export default class Student extends Phaser.GameObjects.Container {
     this.saltoSparks = [];
 
     scene.add.existing(this);
-    this.updateNameTag();
+    this.updateNameTag(false);
     this.draw();
   }
 
   setName(newName) {
     this.playerName = (newName || 'Siswa').trim();
-    this.updateNameTag();
+    this.updateNameTag(this.nameGlow);
+  }
+
+  setGender(gender) {
+    this.gender = gender === 'female' ? 'female' : 'male';
+    this.updateNameTag(this.nameGlow);
+    this.draw();
+  }
+
+  setFacing(facing) {
+    this.facing = facing === 'front' ? 'front' : 'back';
+    this.draw();
+  }
+
+  toggleFacing() {
+    this.setFacing(this.facing === 'front' ? 'back' : 'front');
+    return this.facing;
   }
 
   setTilt(deg) {
@@ -69,7 +97,6 @@ export default class Student extends Phaser.GameObjects.Container {
 
   jump() {
     if (!this.isJumping) {
-      // Lompatan awal
       this.isJumping = true;
       this.isSalto = false;
       this.jumpVy = -500;
@@ -80,7 +107,7 @@ export default class Student extends Phaser.GameObjects.Container {
     } else if (this.isJumping && !this.isSalto && this.jumpY < -25) {
       // Double tap di udara: SALTO / FLIP AKROBATIK 360°!
       this.isSalto = true;
-      this.jumpVy = -400; // Dorongan ekstra saat salto
+      this.jumpVy = -400;
       this.flipAngle = 0;
       this.createSaltoBurst();
       return 'salto';
@@ -126,35 +153,34 @@ export default class Student extends Phaser.GameObjects.Container {
         vy: Math.sin(angle) * spd,
         r: 3.5 + Math.random() * 3,
         alpha: 1,
-        color: i % 2 === 0 ? COLOR.yellow : COLOR.sky,
+        color: i % 2 === 0 ? COLOR.yellow : (this.gender === 'female' ? 0xf472b6 : COLOR.sky),
       });
     }
   }
 
   updateNameTag(glow = false) {
-    this.tagT.setText(`🎓 ${this.playerName}`);
-    const tw = Math.max(68, this.tagT.width + 22);
+    this.nameGlow = glow;
+    const icon = this.gender === 'female' ? '👧' : '👦';
+    this.tagT.setText(`${icon} ${this.playerName}`);
+    const tw = Math.max(72, this.tagT.width + 22);
+    const borderCol = glow ? COLOR.yellow : (this.gender === 'female' ? 0xf472b6 : COLOR.sky);
     this.tagBg.clear();
     this.tagBg.fillStyle(COLOR.navy, 0.9).fillRoundedRect(-tw / 2, -14, tw, 28, 9);
-    this.tagBg.lineStyle(2.5, glow ? COLOR.yellow : COLOR.sky, 0.95).strokeRoundedRect(-tw / 2, -14, tw, 28, 9);
+    this.tagBg.lineStyle(2.5, borderCol, 0.95).strokeRoundedRect(-tw / 2, -14, tw, 28, 9);
   }
 
   tick(dt, rate = 1) {
     this.t += dt * rate;
     this.flash = Math.max(0, this.flash - dt);
 
-    // Fisika lompat & salto
     if (this.isJumping) {
-      this.jumpVy += 1150 * dt; // Gravitasi
+      this.jumpVy += 1150 * dt;
       this.jumpY += this.jumpVy * dt;
 
       if (this.isSalto) {
-        this.flipAngle += dt * 820; // Putaran penuh 360 derajat
-        if (this.flipAngle >= 360) {
-          this.flipAngle = 360;
-        }
+        this.flipAngle += dt * 820;
+        if (this.flipAngle >= 360) this.flipAngle = 360;
 
-        // Jejak kilau emas saat berputar salto
         if (Math.random() < dt * 28) {
           this.saltoSparks.push({
             x: (Math.random() - 0.5) * 36,
@@ -178,18 +204,15 @@ export default class Student extends Phaser.GameObjects.Container {
       }
     }
 
-    // Smooth tilt lerp saat belok
     this.currentTilt += (this.targetTilt - this.currentTilt) * Math.min(1, dt * 10);
     this.targetTilt += (0 - this.targetTilt) * Math.min(1, dt * 6);
 
-    // Update posisi container karakter
     this.charContainer.y = -82 + this.jumpY;
     this.charContainer.angle = this.isSalto ? -this.flipAngle : this.currentTilt;
 
     const ph = this.t * 11, a = Math.sin(ph), oy = -Math.abs(a) * 5;
-    this.tag.y = -188 + (this.isJumping ? this.jumpY : oy);
+    this.tag.y = -192 + (this.isJumping ? this.jumpY : oy);
 
-    // Debu lari saat di tanah
     if (!this.isJumping && Math.random() < dt * 16 * rate) {
       this.dusts.push({
         x: (Math.random() - 0.5) * 36,
@@ -219,12 +242,65 @@ export default class Student extends Phaser.GameObjects.Container {
     this.draw();
   }
 
+  drawLegs(g, cy, a, b, skin, isFemale) {
+    const legA = this.isSalto ? -20 : a;
+    const legB = this.isSalto ? -20 : b;
+    const tuck = this.isSalto ? 10 : 0;
+    const shoeCol = isFemale ? 0xbe185d : COLOR.sky;
+
+    [[-11, legA], [11, legB]].forEach(([x, s]) => {
+      const l = Math.max(0, s) * (this.isSalto ? 22 : 16);
+      if (isFemale) {
+        // Kaki jenjang & kaus kaki putih untuk siswi
+        g.fillStyle(skin).fillRoundedRect(x - 7, cy - 52 - tuck, 14, 28 - l * 0.5, 4);
+        g.fillStyle(COLOR.white).fillRoundedRect(x - 7, cy - 28 - l * 0.7 - tuck, 14, 18 - l * 0.3, 3);
+      } else {
+        // Celana panjang navy untuk siswa
+        g.fillStyle(COLOR.navy).fillRoundedRect(x - 8, cy - 66 - tuck, 16, 56 - l, 5);
+      }
+      g.fillStyle(shoeCol).fillRoundedRect(x - 10, cy - 11 - l - tuck, 20, 12, 4);
+      g.fillStyle(COLOR.white).fillRect(x - 9, cy - 5 - l - tuck, 18, 3);
+    });
+  }
+
+  drawSkirt(g, cy, runOy) {
+    // Rok lipit navy untuk siswi
+    const topY = cy - 76 + runOy;
+    const botY = cy - 42 + runOy;
+    poly(g, COLOR.navy, [
+      [-25, topY], [25, topY],
+      [33, botY], [-33, botY],
+    ]);
+    g.lineStyle(2, 0x07142f, 0.75);
+    [-12, 0, 12].forEach((px) => {
+      g.lineBetween(px * 0.85, topY + 2, px * 1.15, botY - 1);
+    });
+  }
+
+  drawFemaleHairBack(g, cy, runOy, a) {
+    const sway = a * 4;
+    const hair = 0x1b1b2f;
+    // Kuncir dua kiri & kanan dengan pita merah muda
+    [[-1, -24], [1, 24]].forEach(([dir, hx]) => {
+      const tailX = hx + dir * 4 + sway;
+      g.fillStyle(hair).fillEllipse(tailX, cy - 134 + runOy, 14, 34);
+      g.fillStyle(0x2d2d48).fillEllipse(tailX - dir * 2, cy - 136 + runOy, 6, 20);
+      // Pita rambut merah/pink
+      g.fillStyle(0xf43f5e).fillCircle(hx, cy - 148 + runOy, 5.5);
+      g.fillStyle(COLOR.yellow).fillCircle(hx, cy - 148 + runOy, 2);
+    });
+  }
+
   draw() {
     const ph = this.t * 11, a = Math.sin(ph), b = -a, oy = -Math.abs(a) * 5;
     const skin = 0xf1c27d;
+    const ink = 0x111827;
+    const hair = 0x1b1b2f;
+    const hairHi = 0x2d2d48;
+    const isFemale = this.gender === 'female';
     const shirt = this.flash > 0 && Math.floor(this.flash * 20) % 2 === 0 ? COLOR.red : COLOR.white;
 
-    // 1. Bayangan di Aspal (mengecil saat melompat tinggi)
+    // 1. Bayangan di Aspal
     const shadowScale = Math.max(0.25, 1 - Math.abs(this.jumpY) / 190);
     this.shadowG.clear();
     this.shadowG.fillStyle(0x000000, 0.32 * shadowScale).fillEllipse(0, 3, 66 * shadowScale, 14 * shadowScale);
@@ -241,48 +317,150 @@ export default class Student extends Phaser.GameObjects.Container {
       this.sparkG.fillStyle(s.color, s.alpha).fillCircle(s.x, s.y, s.r);
     }
 
-    // 4. Gambar Tubuh Karakter di dalam charContainer (offset +82 relatif terhadap pivot)
+    // 4. Gambar Tubuh Karakter (offset cy = 82 relatif terhadap pivot)
     const g = this.g;
     g.clear();
-
-    const cy = 82; // Titik pusat tubuh
-
-    // Posisi kaki saat salto (menekuk akrobatik) vs saat berlari
-    const legA = this.isSalto ? -20 : a;
-    const legB = this.isSalto ? -20 : b;
+    const cy = 82;
     const runOy = this.isJumping ? 0 : oy;
+    const armA = this.isJumping ? -22 : a * 7;
+    const armB = this.isJumping ? -22 : b * 7;
+    const bagMain = isFemale ? 0xec4899 : COLOR.royal;
+    const bagAccent = isFemale ? 0xfce7f3 : COLOR.sky;
 
-    // Kaki & Sepatu
-    [[-11, legA], [11, legB]].forEach(([x, s]) => {
-      const l = Math.max(0, s) * (this.isSalto ? 22 : 16);
-      g.fillStyle(COLOR.navy).fillRoundedRect(x - 8, cy - 66 - (this.isSalto ? 10 : 0), 16, 56 - l, 5);
-      g.fillStyle(COLOR.sky).fillRoundedRect(x - 10, cy - 11 - l - (this.isSalto ? 10 : 0), 20, 12, 4);
-      g.fillStyle(COLOR.white).fillRect(x - 9, cy - 5 - l - (this.isSalto ? 10 : 0), 18, 3);
-    });
+    if (this.facing === 'front') {
+      // --- TAMPAK DEPAN (MENGHADAP PENGGUNA) ---
+      if (isFemale) {
+        // Rambut belakang & kuncir di belakang kepala/bahu
+        g.fillStyle(hair).fillRoundedRect(-22, cy - 154 + runOy, 44, 34, 12);
+        this.drawFemaleHairBack(g, cy, runOy, a);
+      }
 
-    // Lengan
-    const armA = this.isSalto ? 24 : a * 7;
-    const armB = this.isSalto ? 24 : b * 7;
-    g.lineStyle(10, shirt).lineBetween(-27, cy - 120 + runOy, -33, cy - 84 + runOy + armA);
-    g.lineStyle(10, shirt).lineBetween(27, cy - 120 + runOy, 33, cy - 84 + runOy + armB);
-    g.fillStyle(skin).fillCircle(-33, cy - 80 + runOy + armA, 6).fillCircle(33, cy - 80 + runOy + armB, 6);
+      // Kaki & Sepatu
+      this.drawLegs(g, cy, a, b, skin, isFemale);
 
-    // Badan & Kemeja
-    g.fillStyle(shirt).fillRoundedRect(-26, cy - 130 + runOy, 52, 66, 10);
+      // Lengan
+      g.lineStyle(10, shirt).lineBetween(-27, cy - 120 + runOy, -33, cy - 84 + runOy + armA);
+      g.lineStyle(10, shirt).lineBetween(27, cy - 120 + runOy, 33, cy - 84 + runOy + armB);
+      g.fillStyle(skin).fillCircle(-33, cy - 80 + runOy + armA, 6).fillCircle(33, cy - 80 + runOy + armB, 6);
 
-    // Tas Ransel
-    g.fillStyle(COLOR.royal).fillRoundedRect(-23, cy - 125 + runOy, 46, 58, 10);
-    g.fillStyle(COLOR.sky).fillRect(-20, cy - 120 + runOy, 40, 4);
-    g.fillStyle(COLOR.yellow).fillRoundedRect(-15, cy - 92 + runOy, 30, 18, 5);
-    g.fillStyle(COLOR.navy).fillRect(-2, cy - 122 + runOy, 4, 28);
-    g.fillStyle(COLOR.yellow).fillRect(-7, cy - 131 + runOy, 14, 6);
+      // Badan & Seragam Putih
+      g.fillStyle(shirt).fillRoundedRect(-26, cy - 130 + runOy, 52, 66, 10);
 
-    // Leher & Kepala
-    g.fillStyle(skin).fillRect(-7, cy - 140 + runOy, 14, 12);
-    g.fillStyle(skin).fillCircle(-19, cy - 148 + runOy, 5).fillCircle(19, cy - 148 + runOy, 5);
-    // Rambut hitam
-    g.fillStyle(0x1b1b2f).fillCircle(0, cy - 151 + runOy, 21);
-    g.fillStyle(0x2d2d48).fillCircle(-6, cy - 155 + runOy, 11);
+      // Rok untuk siswi
+      if (isFemale) this.drawSkirt(g, cy, runOy);
+
+      // Tali Tas Ransel di Bahu Depan
+      g.fillStyle(bagMain).fillRoundedRect(-19, cy - 130 + runOy, 7, 52, 3);
+      g.fillStyle(bagMain).fillRoundedRect(12, cy - 130 + runOy, 7, 52, 3);
+      g.fillStyle(COLOR.yellow).fillRect(-18, cy - 92 + runOy, 5, 4).fillRect(13, cy - 92 + runOy, 5, 4);
+
+      // Kerah V & Dasi / Pita Sekolah
+      g.fillStyle(COLOR.sky, 0.35).fillTriangle(-10, cy - 130 + runOy, 10, cy - 130 + runOy, 0, cy - 114 + runOy);
+      if (isFemale) {
+        // Pita kupu-kupu merah muda/merah
+        g.fillStyle(0xf43f5e).fillTriangle(-12, cy - 127 + runOy, -12, cy - 115 + runOy, 0, cy - 121 + runOy);
+        g.fillStyle(0xf43f5e).fillTriangle(12, cy - 127 + runOy, 12, cy - 115 + runOy, 0, cy - 121 + runOy);
+        g.fillStyle(COLOR.yellow).fillCircle(0, cy - 121 + runOy, 3.5);
+      } else {
+        // Dasi sekolah biru/merah
+        g.fillStyle(COLOR.royal).fillRect(-3.5, cy - 124 + runOy, 7, 30);
+        g.fillStyle(COLOR.royal).fillTriangle(-3.5, cy - 94 + runOy, 3.5, cy - 94 + runOy, 0, cy - 87 + runOy);
+        g.fillStyle(COLOR.yellow).fillCircle(0, cy - 124 + runOy, 3.5);
+      }
+
+      // Saku & Badge OSIS kecil di dada kiri
+      g.fillStyle(COLOR.navy, 0.25).fillRoundedRect(8, cy - 112 + runOy, 12, 14, 2);
+      g.fillStyle(COLOR.yellow).fillCircle(14, cy - 108 + runOy, 3);
+
+      // Leher, Telinga, & Wajah
+      g.fillStyle(skin).fillRect(-7, cy - 140 + runOy, 14, 12);
+      g.fillStyle(skin).fillCircle(-20, cy - 149 + runOy, 5).fillCircle(20, cy - 149 + runOy, 5);
+      g.fillStyle(skin).fillCircle(0, cy - 151 + runOy, 21);
+
+      // Pipi merona
+      g.fillStyle(0xf472b6, isFemale ? 0.45 : 0.25)
+        .fillEllipse(-12, cy - 143 + runOy, 7, 4)
+        .fillEllipse(12, cy - 143 + runOy, 7, 4);
+
+      // Mata Ekspresif
+      [-8, 8].forEach((ex) => {
+        g.fillStyle(COLOR.white).fillEllipse(ex, cy - 149 + runOy, 8.5, 9.5);
+        g.fillStyle(ink).fillCircle(ex, cy - 149 + runOy, isFemale ? 3.8 : 3.4);
+        g.fillStyle(COLOR.white).fillCircle(ex - 1.3, cy - 150.5 + runOy, 1.4);
+        if (isFemale) {
+          g.lineStyle(2, ink).lineBetween(ex - 4, cy - 153 + runOy, ex + 4, cy - 153 + runOy);
+        }
+      });
+
+      // Alis
+      if (this.sweating) {
+        g.lineStyle(2.5, ink)
+          .lineBetween(-13, cy - 156 + runOy, -4, cy - 158 + runOy)
+          .lineBetween(13, cy - 156 + runOy, 4, cy - 158 + runOy);
+      } else {
+        g.lineStyle(2.5, ink)
+          .lineBetween(-12, cy - 157 + runOy, -4, cy - 157 + runOy)
+          .lineBetween(4, cy - 157 + runOy, 12, cy - 157 + runOy);
+      }
+
+      // Mulut (senyum ceria vs cemas)
+      if (this.sweating) {
+        g.fillStyle(0x991b1b).fillEllipse(0, cy - 138 + runOy, 7, 8);
+      } else {
+        g.fillStyle(0x991b1b).fillEllipse(0, cy - 138 + runOy, 10, 6);
+        g.fillStyle(skin).fillRect(-6, cy - 142 + runOy, 12, 4);
+      }
+
+      // Rambut Depan & Poni
+      g.fillStyle(hair).fillEllipse(0, cy - 166 + runOy, 42, 18);
+      if (isFemale) {
+        // Poni siswi lembut + jepit rambut kuning
+        g.fillStyle(hair).fillEllipse(-16, cy - 158 + runOy, 12, 16);
+        g.fillStyle(hair).fillEllipse(16, cy - 158 + runOy, 12, 16);
+        g.fillStyle(hair).fillTriangle(-14, cy - 166 + runOy, -2, cy - 166 + runOy, -7, cy - 155 + runOy);
+        g.fillStyle(hair).fillTriangle(2, cy - 166 + runOy, 14, cy - 166 + runOy, 8, cy - 155 + runOy);
+        g.fillStyle(COLOR.yellow).fillRoundedRect(10, cy - 163 + runOy, 9, 4, 2);
+      } else {
+        // Poni siswa rapi bertekstur
+        g.fillStyle(hair).fillTriangle(-16, cy - 164 + runOy, -4, cy - 164 + runOy, -10, cy - 154 + runOy);
+        g.fillStyle(hair).fillTriangle(-4, cy - 165 + runOy, 8, cy - 165 + runOy, 2, cy - 153 + runOy);
+        g.fillStyle(hair).fillTriangle(6, cy - 164 + runOy, 18, cy - 164 + runOy, 12, cy - 155 + runOy);
+      }
+      g.fillStyle(hairHi).fillEllipse(-6, cy - 168 + runOy, 16, 6);
+    } else {
+      // --- TAMPAK BELAKANG (MENGHADAP JALAN) ---
+      this.drawLegs(g, cy, a, b, skin, isFemale);
+
+      // Lengan
+      g.lineStyle(10, shirt).lineBetween(-27, cy - 120 + runOy, -33, cy - 84 + runOy + armA);
+      g.lineStyle(10, shirt).lineBetween(27, cy - 120 + runOy, 33, cy - 84 + runOy + armB);
+      g.fillStyle(skin).fillCircle(-33, cy - 80 + runOy + armA, 6).fillCircle(33, cy - 80 + runOy + armB, 6);
+
+      // Badan & Kemeja
+      g.fillStyle(shirt).fillRoundedRect(-26, cy - 130 + runOy, 52, 66, 10);
+
+      // Rok untuk siswi
+      if (isFemale) this.drawSkirt(g, cy, runOy);
+
+      // Tas Ransel
+      g.fillStyle(bagMain).fillRoundedRect(-23, cy - 125 + runOy, 46, 56, 10);
+      g.fillStyle(bagAccent).fillRect(-20, cy - 120 + runOy, 40, 4);
+      g.fillStyle(COLOR.yellow).fillRoundedRect(-15, cy - 92 + runOy, 30, 18, 5);
+      g.fillStyle(COLOR.navy).fillRect(-2, cy - 122 + runOy, 4, 28);
+      g.fillStyle(COLOR.yellow).fillRect(-7, cy - 131 + runOy, 14, 6);
+
+      // Leher & Kepala (belakang)
+      g.fillStyle(skin).fillRect(-7, cy - 140 + runOy, 14, 12);
+      g.fillStyle(skin).fillCircle(-19, cy - 148 + runOy, 5).fillCircle(19, cy - 148 + runOy, 5);
+
+      if (isFemale) this.drawFemaleHairBack(g, cy, runOy, a);
+      g.fillStyle(hair).fillCircle(0, cy - 151 + runOy, 21);
+      g.fillStyle(hairHi).fillCircle(-6, cy - 155 + runOy, 11);
+      if (isFemale) {
+        // Tambahan rambut belakang menutup tengkuk
+        g.fillStyle(hair).fillRoundedRect(-18, cy - 144 + runOy, 36, 16, 6);
+      }
+    }
 
     // Keringat dingin jika tegang (hanya saat tidak salto)
     if (this.sweating && !this.isSalto) {

@@ -43,13 +43,17 @@ export default class GameScene extends Phaser.Scene {
 
     // Karakter Guru Pak Tono & Siswa
     this.teacher = new Teacher(this, CX + laneW(1.1) * 0.72, lineY(1.1)).setDepth(11);
-    this.student = new Student(this, laneX(1, MC_Q), lineY(MC_Q), Storage.getPlayerName()).setDepth(10).setScale(scaleAt(MC_Q) * 1.1);
+    this.student = new Student(this, laneX(1, MC_Q), lineY(MC_Q), {
+      name: Storage.getPlayerName(),
+      gender: Storage.getGender(),
+      facing: Storage.getFacing(),
+    }).setDepth(10).setScale(scaleAt(MC_Q) * 1.1);
 
     this.buildHud();
     this.buildQuizPanel();
 
     const kb = this.input.keyboard;
-    this.keys = kb.addKeys({ left: 'LEFT', right: 'RIGHT', up: 'UP', space: 'SPACE', w: 'W' });
+    this.keys = kb.addKeys({ left: 'LEFT', right: 'RIGHT', up: 'UP', space: 'SPACE', w: 'W', f: 'F' });
     kb.on('keydown-ESC', () => this.pauseGame());
 
     kb.on('keydown', (event) => {
@@ -94,6 +98,7 @@ export default class GameScene extends Phaser.Scene {
     this.distT = text(this, 36, 118, 'Jarak Pak Tono: 80 m', 17, hex(COLOR.sky), {}, [0, 0]).setDepth(21);
     this.radarG = this.add.graphics().setDepth(21);
 
+    this.flipBtn = button(this, 768, 44, 56, 56, '🔄', () => this.toggleCharacterFacing(), { size: 22, fill: COLOR.navy }).setDepth(21);
     this.pauseBtn = button(this, 836, 44, 56, 56, 'II', () => this.pauseGame(), { size: 24, fill: COLOR.navy }).setDepth(21);
 
     // Vignette bahaya merah
@@ -232,7 +237,7 @@ export default class GameScene extends Phaser.Scene {
 
       if (this.combo >= 2) {
         Sfx.play('combo');
-        this.floatText(x0 => 1080, 290, `🔥 STREAK x${this.combo}! (+${pts})`, hex(COLOR.yellow));
+        this.floatText(1080, 290, `🔥 STREAK x${this.combo}! (+${pts})`, hex(COLOR.yellow));
         this.fbT.setText(`Sempurna! +${pts} poin (Streak x${this.combo})`).setColor(hex(COLOR.green));
         this.student.updateNameTag(true);
       } else {
@@ -259,6 +264,14 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ---------- Alur Permainan ----------
+  toggleCharacterFacing() {
+    if (this.state === 'ending' || this.scene.isPaused()) return;
+    const next = this.student.toggleFacing();
+    Storage.setFacing(next);
+    Sfx.play('click');
+    this.floatText(this.student.x, this.student.y - 180, next === 'front' ? '👀 Hadap Depan' : '🏃 Hadap Jalan', hex(COLOR.sky));
+  }
+
   pauseGame() {
     if (this.state === 'ending' || this.scene.isPaused()) return;
     Sfx.stopBgm();
@@ -310,6 +323,11 @@ export default class GameScene extends Phaser.Scene {
       } else if (act === 'jump') {
         Sfx.play('jump');
       }
+    }
+
+    // Putar arah hadap karakter (F)
+    if (J(this.keys.f)) {
+      this.toggleCharacterFacing();
     }
 
     const currentSpeed = Math.min(0.5 + this.elapsed * 0.003, 0.85);

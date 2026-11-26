@@ -11,6 +11,7 @@ import Teacher from '../characters/Teacher.js';
 export default class MenuScene extends Phaser.Scene {
   constructor() { super('MenuScene'); }
   create() {
+    this.isModalOpen = false;
     drawCityBackdrop(this);
 
     // Partikel kunang-kunang / debu bercahaya di udara
@@ -68,29 +69,44 @@ export default class MenuScene extends Phaser.Scene {
       this.soundBtn.setLabel(state ? '🔊' : '🔇');
     }, { fill: COLOR.navy, size: 24 });
 
-    // Karakter Siswa & Pak Tono
-    this.student = new Student(this, 920, 580).setScale(1.7);
-    this.teacher = new Teacher(this, 1100, 710).setScale(1.9);
+    // Karakter Siswa (menghadap depan!) & Pak Tono
+    this.student = new Student(this, 890, 545, { facing: 'front' }).setScale(1.55);
+    this.teacher = new Teacher(this, 1120, 650).setScale(1.7);
 
-    // Tombol Ganti Nama di Bawah Siswa
-    this.nameBtn = button(this, 920, 665, 250, 48, `👤 ${Storage.getPlayerName()} (Ganti)`, () => this.openNameDialog(), { size: 17, fill: COLOR.navy });
+    // Pemilih Karakter Pria / Wanita di bawah karakter siswa
+    this.maleBtn = button(this, 824, 608, 124, 42, '👦 Pria', () => this.selectGender('male'), { size: 17 });
+    this.femaleBtn = button(this, 956, 608, 124, 42, '👧 Wanita', () => this.selectGender('female'), { size: 17 });
+    this.refreshGenderButtons();
+
+    // Tombol Ganti Nama & Putar Hadap Karakter
+    this.nameBtn = button(this, 855, 664, 186, 44, `✏️ ${Storage.getPlayerName()}`, () => this.openNameDialog(), { size: 17, fill: COLOR.navy });
+    this.flipBtn = button(this, 987, 664, 64, 44, '🔄', () => {
+      const f = this.student.toggleFacing();
+      const tip = text(this, 890, 330, f === 'front' ? 'Hadap Depan' : 'Hadap Belakang', 18, hex(COLOR.sky), { stroke: '#07142f', strokeThickness: 4 }).setDepth(50);
+      this.tweens.add({ targets: tip, y: 300, alpha: 0, duration: 850, onComplete: () => tip.destroy() });
+    }, { size: 20, fill: COLOR.navy });
 
     // Interaksi Siswa di Menu: Klik atau tekan Spasi/Up untuk Lompat & Salto!
     this.student.setInteractive(new Phaser.Geom.Rectangle(-40, -180, 80, 180), Phaser.Geom.Rectangle.Contains).on('pointerup', () => {
-      this.doStudentStunt();
+      if (!this.isModalOpen) this.doStudentStunt();
     });
 
-    this.input.keyboard.on('keydown-SPACE', () => this.doStudentStunt());
-    this.input.keyboard.on('keydown-UP', () => this.doStudentStunt());
+    this.input.keyboard.on('keydown-SPACE', () => {
+      if (!this.isModalOpen) this.doStudentStunt();
+    });
+    this.input.keyboard.on('keydown-UP', () => {
+      if (!this.isModalOpen) this.doStudentStunt();
+    });
 
     // Interaksi klik Pak Tono yang lucu
     this.teacher.setInteractive(new Phaser.Geom.Rectangle(-45, -220, 90, 220), Phaser.Geom.Rectangle.Contains).on('pointerup', () => {
+      if (this.isModalOpen) return;
       Sfx.play('click');
       this.teacher.setAngry(true);
-      const bubble = text(this, 1080, 430, 'Pak Tono: "Ayo belajar, jangan lari!"', 20, hex(COLOR.yellow), { stroke: '#07142f', strokeThickness: 4 }).setDepth(50);
+      const bubble = text(this, 1080, 385, 'Pak Tono: "Ayo belajar, jangan lari!"', 20, hex(COLOR.yellow), { stroke: '#07142f', strokeThickness: 4 }).setDepth(50);
       this.tweens.add({
         targets: bubble,
-        y: 400,
+        y: 355,
         alpha: 0,
         duration: 1500,
         ease: 'Quad.easeOut',
@@ -102,21 +118,37 @@ export default class MenuScene extends Phaser.Scene {
     });
   }
 
+  selectGender(g) {
+    if (this.isModalOpen) return;
+    Storage.setGender(g);
+    this.student.setGender(g);
+    this.refreshGenderButtons();
+  }
+
+  refreshGenderButtons() {
+    const g = Storage.getGender();
+    this.maleBtn.paint(g === 'male' ? COLOR.royal : COLOR.navy);
+    this.femaleBtn.paint(g === 'female' ? 0xec4899 : COLOR.navy);
+  }
+
   doStudentStunt() {
     const act = this.student.jump();
     if (act === 'salto') {
       Sfx.play('salto');
-      const t = text(this, 920, 360, '✨ SALTO!', 24, hex(COLOR.yellow), { stroke: '#07142f', strokeThickness: 4 }).setDepth(50);
-      this.tweens.add({ targets: t, y: 320, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
+      const t = text(this, 890, 320, '✨ SALTO!', 24, hex(COLOR.yellow), { stroke: '#07142f', strokeThickness: 4 }).setDepth(50);
+      this.tweens.add({ targets: t, y: 280, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
     } else if (act === 'jump') {
       Sfx.play('jump');
     }
   }
 
   openNameDialog() {
-    showNameModal(this, (newName) => {
+    if (this.isModalOpen) return;
+    showNameModal(this, (newName, newGender) => {
       this.student.setName(newName);
-      this.nameBtn.setLabel(`👤 ${newName} (Ganti)`);
+      this.student.setGender(newGender);
+      this.nameBtn.setLabel(`✏️ ${newName}`);
+      this.refreshGenderButtons();
     });
   }
 

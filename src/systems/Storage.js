@@ -1,5 +1,11 @@
 const KEY = 'mindrush.v1';
-const base = () => ({ high: { easy: 0, medium: 0, hard: 0 }, sound: true, playerName: 'Budi' });
+const base = () => ({
+  high: { easy: 0, medium: 0, hard: 0 },
+  sound: true,
+  playerName: 'Budi',
+  gender: 'male',
+  facing: 'back',
+});
 
 function read() {
   try {
@@ -9,6 +15,8 @@ function read() {
       sound: d.sound ?? b.sound,
       high: { ...b.high, ...(d.high || {}) },
       playerName: (typeof d.playerName === 'string' && d.playerName.trim()) ? d.playerName.trim().slice(0, 14) : b.playerName,
+      gender: d.gender === 'female' ? 'female' : 'male',
+      facing: d.facing === 'front' ? 'front' : 'back',
     };
   } catch { return base(); }
 }
@@ -31,5 +39,19 @@ export const Storage = {
     d.playerName = clean || 'Budi';
     write(d);
     return d.playerName;
+  },
+  getGender: () => read().gender || 'male',
+  setGender(gender) {
+    const d = read();
+    d.gender = gender === 'female' ? 'female' : 'male';
+    write(d);
+    return d.gender;
+  },
+  getFacing: () => read().facing || 'back',
+  setFacing(facing) {
+    const d = read();
+    d.facing = facing === 'front' ? 'front' : 'back';
+    write(d);
+    return d.facing;
   },
 };
